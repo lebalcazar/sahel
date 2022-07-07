@@ -8,31 +8,22 @@ library(terra)
 library(pROC)
 
 # leer los datos históricos de persiann-cdr desde el archivo pronostico_poly
-datos <- read_rds("/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/sahel/data/rds/pronostico_poly_mensual.rds")
-
-# persiann historico
-cdr_hist <- datos %>% 
-  dplyr::select(-pred_poly)
-
-saveRDS(cdr_hist, "/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/sahel/data/rds/cdr_hist.rds")
-
-# leer datos 
-cdr_hist <- read_rds("/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/sahel/data/rds/cdr_hist.rds")
+cdr_hist <- read_rds("data/rds/pronostico_poly_mensual.rds")  %>% 
+ dplyr::select(-pred_poly)
 
 # persiann 2021
-cdr_2021 <- read_rds("/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/sahel/data/rds/cdr_2021.rds")
+cdr_2021 <- read_rds("data/rds/cdr_2021.rds")
 
 
 # pronostico 2021
-pronost_2021 <- read_rds("/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/sahel/data/rds/pronostico_poly_2021.rds") %>% 
+pronost_2021 <- read_rds("data/rds/pronostico_poly_2021.rds") %>% 
   dplyr::select(date, x, y, pred_poly)
 
 
 cdr_y_pred <- 
   left_join(cdr_2021, pronost_2021, by = c("x", "y", "date")) %>% 
   dplyr::select(date, x, y, name, cdr, pred_poly) %>% 
-  # dplyr::filter(name == "Mamou")
-  filter(lubridate::month(date) >= 5 & lubridate::month(date) <= 10)
+  filter(between(lubridate::month(date), 5, 10))
   
 cdr_y_pred %>% 
   ggplot(aes(x = cdr, y = pred_poly)) +

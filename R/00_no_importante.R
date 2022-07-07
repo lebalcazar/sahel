@@ -27,32 +27,32 @@ ext <- terra::extract(sst_mask, sst_poligonos_vec, fun = "mean", na.rm = TRUE) %
   dplyr::select(date, sst, reg_sst)
 
 # guaradar 
-saveRDS(ext, '/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/sahel/data/rds/sst_2021.rds')
+saveRDS(ext, 'data/rds/sst_2021.rds')
 
-sst_2021 <- read_rds('/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/sahel/data/rds/sst_2021.rds')
+sst_2021 <- read_rds('data/rds/sst_2021.rds')
 
 
 #unir sst2020 y 2021
 
 sst_2020_2021 <- bind_rows(sst_2020, sst_2021)
 
-saveRDS(sst_2020_2021, '/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/sahel/data/rds/sst_2020_2021.rds')
+saveRDS(sst_2020_2021, 'data/rds/sst_2020_2021.rds')
 
 
-coef_prc_poly <- read.csv("/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/sahel/data/csv/coeficientes_de_precipitación.csv", 
+coef_prc_poly <- read.csv("data/csv/coeficientes_de_precipitación.csv", 
                           header = T) %>% 
   mutate(which = str_remove(which, ": poly"))
   
 
 # sst 2020 - 2021
-sst_2020_2021 <- readRDS("/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/sahel/data/rds/sst_2020_2021.rds") %>% 
+sst_2020_2021 <- readRDS("data/rds/sst_2020_2021.rds") %>% 
   filter(reg_sst == "s3")
 
 # cdr
-cdr_21 <- readRDS("/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/sahel/data/rds/cdr2021_por_pixel.rds")
+cdr_21 <- readRDS("data/rds/cdr2021_por_pixel.rds")
 
 # 
-pron_mes <- readRDS("/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/sahel/data/rds/pronostico_poly_mensual.rds")
+pron_mes <- readRDS("data/rds/pronostico_poly_mensual.rds")
 
 
 
@@ -66,7 +66,7 @@ datos1 <- left_join(sst_2020_2021, coef_prc_poly, by = c("reg_sst" = "which")) %
 
 
 # CDR historico 
-cdr_hist <- read_rds("/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/sahel/data/rds/datos_f.rds")
+cdr_hist <- read_rds("data/rds/datos_f.rds")
 
 # Matam 
 # Labe 
