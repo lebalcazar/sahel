@@ -1,7 +1,8 @@
 
-library(net)
 
-nc <- nc_open("/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/04SIG/01Rawdata/sst/sst_global/daily_nc_raw/2021/adaptor.mars.internal-1656989991.4653413-10335-8-5a9d5e45-7493-4e88-9fdd-84ad4c7b9e59.nc")
+
+
+
 
 
 # leer datos sst ERA5 2021
@@ -17,6 +18,10 @@ sst_poligonos_vec <- vect(sst_poligonos)
 sst_crop <- terra::crop(sst_21 ,sst_poligonos)
 
 sst_mask <- terra::mask(sst_crop, sst_poligonos_vec)
+
+writeRaster(sst_mask, 
+            filename = paste0("/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/sahel/data/tif/sst_2020_2021/", 
+                              names(sst_mask), ".tif"))
 
 # extraer la sst para cada zona SST (promedio)
 ext <- terra::extract(sst_mask, sst_poligonos_vec, fun = "mean", na.rm = TRUE) %>% 
