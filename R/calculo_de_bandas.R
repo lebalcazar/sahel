@@ -34,19 +34,27 @@ band_limits <- function(x,
 cdr_hist <- read_rds("data/rds/pronostico_poly_mensual.rds")  %>% 
  dplyr::select(-pred_poly)
 
-probs <- c(0.30, 0.5, 0.70)
+probs <- c(0.30, 0.5, 0.70, .999)
 estacion <- "Labe"
 
 cdr_test <- cdr_hist |> 
- filter(name == estacion, between(month(date), 7, 9))
+ filter(name == estacion, between(month(date), 5, 10))
 
 bandas <- group_by(cdr_test, month = month(date), name, x, y) |> 
  group_map(~band_limits(.x$cdr, prob = probs)) |> 
  reduce(bind_rows)
 
+cdr_y_pred <- 
+ left_join(read_rds("data/rds/cdr_2021.rds"), 
+           read_rds("data/rds/pronostico_poly_2021.rds") %>% 
+            dplyr::select(date, x, y, pred_poly), 
+           by = c("x", "y", "date")) %>% 
+ dplyr::select(date, x, y, name, cdr, pred_poly) %>% 
+ filter(between(lubridate::month(date), 5, 10))
+
 cdr_pred21 <- cdr_y_pred |> 
  rename(pred = pred_poly) |> 
- filter(name == estacion, between(month(date), 7, 9)) |> 
+ filter(name == estacion, between(month(date), 5, 10)) |> 
  bind_cols(bandas)
 
 plot_bandas <- 
@@ -82,6 +90,38 @@ ggsave(filename = paste0("bandas_", estacion, '.png'),
 # abline(v = lims, col = "blue")
 # abline(v = mean(cdr_test$cdr), col = "orange")
 # abline(v = mean(cdr_pred21$cdr), col = "green")
+
+
+## Grafico de barras apiladas
+
+# plot_bandas <- 
+ ggplot(cdr_pred21) +
+  aes(x = date, 
+      y = pred, 
+      xmin = date - 13, 
+      xmax = date + 13) +
+  geom_col(data = select(cdr_pred21, date, p30, p70, p99.9) |> 
+            pivot_longer(cdr_pred21, cols = -date, 
+                         names_to = "prob",
+                         names_pattern = "p(.+)",
+                         names_transform = list(prob = as.numeric),
+                         values_to = "valor") |> 
+            group_by(date) |> 
+            mutate(valor1 = c(valor[1], diff(valor)),
+                   class = recode_factor(prob, 
+                                         `99.9` = "Húmedo", 
+                                         `70` = "Medio", 
+                                         `30` = "Seco")), 
+           mapping = aes(date, valor1, fill = class)) +
+  geom_point(aes(y = normal, shape = "Normal 1983-2020")) +
+  geom_point(aes(y = cdr, shape = "PERSIANN-CDR")) +
+  geom_point(aes(y = p50, shape = "Probabilidad 0.5")) +
+  geom_linerange(aes(linetype = "Pronóstico 2021"), key_glyph = draw_key_path) +
+  # scale_shape_discrete(guide = guide_legend(override.aes =
+  #                                             list(linetype = c(0, 0, 0, 1), 
+  #                                                  shape = c(15, 16, 17, NA)))) +
+  labs(shape = "", fill = "", linetype = "") +
+  theme_bw() 
 
 
 #1. calcular bandas para todos los pixeles
