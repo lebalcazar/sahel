@@ -32,17 +32,25 @@ band_limits <- function(x,
 
 
 cdr_hist <- read_rds("data/rds/pronostico_poly_mensual.rds")  %>% 
- dplyr::select(-pred_poly)
+ dplyr::select(-pred_poly) %>% 
+  dplyr::filter(lubridate::year(date) >= 1991)  # nueva normal según PRESAO 2021 
 
-probs <- c(0.30, 0.5, 0.70, .999)
-estacion <- "Labe"
+probs <- c(0.30, 0.5, 0.70)
+# estacion <- "Labe"
 
 cdr_test <- cdr_hist |> 
- filter(name == estacion, between(month(date), 5, 10))
+  filter(
+    # name == estacion, 
+    name != "other", 
+    between(month(date), 5, 10), 
+    lubridate::year(date) >= 1991)  # nueva normal según PRESAO 2021
 
 bandas <- group_by(cdr_test, month = month(date), name, x, y) |> 
- group_map(~band_limits(.x$cdr, prob = probs)) |> 
- reduce(bind_rows)
+ # group_map(~band_limits(.x$cdr, prob = probs)) |> 
+ group_modify(~band_limits(.x$cdr, prob = probs) %>% 
+                t() %>% 
+                tibble::as_tibble()) # |> 
+ # reduce(bind_rows)
 
 cdr_y_pred <- 
  left_join(read_rds("data/rds/cdr_2021.rds"), 
@@ -52,12 +60,19 @@ cdr_y_pred <-
  dplyr::select(date, x, y, name, cdr, pred_poly) %>% 
  filter(between(lubridate::month(date), 5, 10))
 
-cdr_pred21 <- cdr_y_pred |> 
+cdr_pred21 <- 
+  cdr_y_pred |> 
  rename(pred = pred_poly) |> 
- filter(name == estacion, between(month(date), 5, 10)) |> 
- bind_cols(bandas)
+ filter(
+   # name == estacion, 
+   name != "other", 
+   between(month(date), 5, 10)) |>
+  dplyr::mutate(month = lubridate::month(date)) %>%
+  dplyr::select(month, date, name, x, y, cdr, pred) %>% 
+ # bind_cols(bandas)
+  left_join(bandas, by = c("month", "name", "x", "y"))
 
-plot_bandas <- 
+# plot_bandas <- 
 ggplot(cdr_pred21) +
   aes(x = date, y = pred) +
   geom_ribbon(aes(ymin = p30, ymax = p70, fill = "bands 0.30, 0.70"), alpha = 0.3) +
@@ -66,14 +81,16 @@ ggplot(cdr_pred21) +
   geom_line(aes(y = p50, color = "Montly median")) +
   # geom_line(aes(y = cdr, color = "PERSIANN-CDR 2021")) +
   geom_point(aes(color = "Prediction")) +
-  annotate(geom="text", 
-           x = as.Date("2021-07-5"), 
-           y = max(cdr_pred21$p70), 
-           label = estacion) +
+  facet_wrap(~name) +
+  # annotate(geom = "text", 
+  #          x = as.Date(paste0("2021-", cdr_pred21$month, "-01")), 
+  #          y = max(cdr_pred21$p70), 
+  #          label = "estacion"
+  #          ) +
   # scale_color_brewer(type = "qual", palette = "Dark2") +
 
   theme_bw() +
-  theme(legend.position = c(.60, 0.20), 
+  theme(legend.position = c(.90, 0.10), 
         panel.grid.minor = element_blank(), 
         legend.background = element_rect(colour = NA, fill = NA)) +
   labs(x = "", 
@@ -96,24 +113,28 @@ ggsave(filename = paste0("bandas_", estacion, '.png'),
 
 # plot_bandas <- 
  ggplot(cdr_pred21) +
-  aes(x = date, 
+  aes(x = date,    
       y = pred, 
-      xmin = date - 13, 
-      xmax = date + 13) +
-  geom_col(data = select(cdr_pred21, date, p30, p70, p99.9) |> 
-            pivot_longer(cdr_pred21, cols = -date, 
+      xmin = date - 13,
+      xmax = date + 13
+      ) +
+  # geom_col(data = select(cdr_pred21, date, p30, p70, p99.9) |> 
+  geom_col(data = select(cdr_pred21, date, p30, p50, p70) |> 
+            pivot_longer(cdr_pred21, cols = -date,  
                          names_to = "prob",
                          names_pattern = "p(.+)",
                          names_transform = list(prob = as.numeric),
                          values_to = "valor") |> 
+            # group_by(date) |> 
             group_by(date) |> 
             mutate(valor1 = c(valor[1], diff(valor)),
                    class = recode_factor(prob, 
-                                         `99.9` = "Húmedo", 
-                                         `70` = "Medio", 
+                                         `70` = "Húmedo", 
+                                         `50` = "Medio", 
                                          `30` = "Seco")), 
+           # mapping = aes(date, valor1, fill = class)) +
            mapping = aes(date, valor1, fill = class)) +
-  geom_point(aes(y = normal, shape = "Normal 1983-2020")) +
+  geom_point(aes(y = normal, shape = "Normal 1991-2020")) +
   geom_point(aes(y = cdr, shape = "PERSIANN-CDR")) +
   geom_point(aes(y = p50, shape = "Probabilidad 0.5")) +
   geom_linerange(aes(linetype = "Pronóstico 2021"), key_glyph = draw_key_path) +
@@ -121,7 +142,8 @@ ggsave(filename = paste0("bandas_", estacion, '.png'),
   #                                             list(linetype = c(0, 0, 0, 1), 
   #                                                  shape = c(15, 16, 17, NA)))) +
   labs(shape = "", fill = "", linetype = "") +
-  theme_bw() 
+  theme_bw() +
+  facet_wrap(~name)
 
 
 #1. calcular bandas para todos los pixeles
@@ -131,14 +153,14 @@ ggsave(filename = paste0("bandas_", estacion, '.png'),
 #5. hacer un mapa
 
 bandas <- cdr_hist |> 
- filter(between(month(date), 7, 9)) |> 
+ filter(between(month(date), 5, 10)) |> 
  group_by(month = month(date), name, x, y) |> 
  group_modify(~band_limits(.x$cdr, prob = probs) |> t() |> as.data.frame()) 
 
 
 cdr_pred21map <- bandas |> 
  left_join( cdr_y_pred |> 
-             filter(between(month(date), 7, 9)) |> 
+             filter(between(month(date), 5, 10)) |> 
              group_by(month = month(date), name, x, y) |> 
              summarise(pred = mean(pred_poly),
                        cdr = mean(cdr),
@@ -147,7 +169,7 @@ cdr_pred21map <- bandas |>
                           pred < p30 ~ "Bajo",
                           TRUE ~ "Medio") |> 
          factor(levels = c("Bajo", "Medio", "Alto")))
-cdr_pred21map
+# cdr_pred21map
 
 # 20 estaciones meteorológicas
 ubcEst <- st_read('data/vector_dpkg/ubc_est20.gpkg')
