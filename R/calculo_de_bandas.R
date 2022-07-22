@@ -118,22 +118,20 @@ ggsave(filename = paste0("bandas_", estacion, '.png'),
       xmin = date - 13,
       xmax = date + 13
       ) +
-  # geom_col(data = select(cdr_pred21, date, p30, p70, p99.9) |> 
-  geom_col(data = select(cdr_pred21, date, p30, p50, p70) |> 
-            pivot_longer(cdr_pred21, cols = -date,  
+  geom_col(data = select(cdr_pred21, date, name, p30, p50, p70) |> 
+            pivot_longer(cdr_pred21, cols = -c(date, name),  
                          names_to = "prob",
                          names_pattern = "p(.+)",
                          names_transform = list(prob = as.numeric),
                          values_to = "valor") |> 
-            # group_by(date) |> 
-            group_by(date) |> 
-            mutate(valor1 = c(valor[1], diff(valor)),
+            group_by(date, name) |> 
+            mutate(valor = c(valor[1], diff(valor)),
                    class = recode_factor(prob, 
                                          `70` = "Húmedo", 
                                          `50` = "Medio", 
                                          `30` = "Seco")), 
            # mapping = aes(date, valor1, fill = class)) +
-           mapping = aes(date, valor1, fill = class)) +
+           mapping = aes(date, valor, fill = class)) +
   geom_point(aes(y = normal, shape = "Normal 1991-2020")) +
   geom_point(aes(y = cdr, shape = "PERSIANN-CDR")) +
   geom_point(aes(y = p50, shape = "Probabilidad 0.5")) +
