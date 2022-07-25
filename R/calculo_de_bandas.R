@@ -29,8 +29,9 @@ band_limits <- function(x,
   rate = param$estimate["rate"])
  setNames(c(lims, mean(x)), c(paste0("p", prob * 100), "normal"))
 }
+# fin de función
 
-
+# datos históricos CDR
 cdr_hist <- read_rds("data/rds/pronostico_poly_mensual.rds")  %>% 
  dplyr::select(-pred_poly) %>% 
   dplyr::filter(lubridate::year(date) >= 1991)  # nueva normal según PRESAO 2021 
@@ -72,7 +73,7 @@ cdr_pred21 <-
  # bind_cols(bandas)
   left_join(bandas, by = c("month", "name", "x", "y"))
 
-# plot_bandas <- 
+plot_bandas <-
 ggplot(cdr_pred21) +
   aes(x = date, y = pred) +
   geom_ribbon(aes(ymin = p30, ymax = p70, fill = "bands 0.30, 0.70"), alpha = 0.3) +
@@ -98,9 +99,9 @@ ggplot(cdr_pred21) +
        color = "")
 
 # guardar plot
-ggsave(filename = paste0("bandas_", estacion, '.png'), 
+ggsave(filename = "plot_bandas.png", 
        plot = plot_bandas, device = 'png', 
-       path = 'plots_resultado/', 
+       path = 'plots/', 
        units = 'cm', height = 16, width = 20, dpi = 300)  # height=14, width=12
 
 # denscomp(param)
@@ -111,37 +112,63 @@ ggsave(filename = paste0("bandas_", estacion, '.png'),
 
 ## Grafico de barras apiladas
 
-# plot_bandas <- 
+plot_col <-
  ggplot(cdr_pred21) +
   aes(x = date,    
-      y = pred, 
+      y = pred,
       xmin = date - 13,
       xmax = date + 13
       ) +
-  geom_col(data = select(cdr_pred21, date, name, p30, p50, p70) |> 
-            pivot_longer(cdr_pred21, cols = -c(date, name),  
+  geom_col(data = dplyr::select(cdr_pred21, date, name, p30, p50, p70) |> 
+            pivot_longer(cols = -c(date, name),  
                          names_to = "prob",
-                         names_pattern = "p(.+)",
-                         names_transform = list(prob = as.numeric),
+                         # names_pattern = "p(.+)",
+                         # names_transform = list(prob = as.numeric),
                          values_to = "valor") |> 
             group_by(date, name) |> 
             mutate(valor = c(valor[1], diff(valor)),
                    class = recode_factor(prob, 
-                                         `70` = "Húmedo", 
-                                         `50` = "Medio", 
-                                         `30` = "Seco")), 
+                                         "p70" = "Wet", 
+                                         "p50" = "Medium", 
+                                         "p30" = "Dry")), 
            # mapping = aes(date, valor1, fill = class)) +
-           mapping = aes(date, valor, fill = class)) +
+           mapping = aes(date, valor, fill = class), alpha = 0.6) +
+   scale_fill_manual(values = 
+                         c("Wet"    = "blue", 
+                           "Medium" = "yellow", 
+                           "Dry"    = "red"), 
+                       labels = 
+                         c("Wet"    = "Wet", 
+                           "Medium" = "Medium", 
+                           "Dry"    = "Dry")) +
   geom_point(aes(y = normal, shape = "Normal 1991-2020")) +
   geom_point(aes(y = cdr, shape = "PERSIANN-CDR")) +
-  geom_point(aes(y = p50, shape = "Probabilidad 0.5")) +
+  # geom_point(aes(y = p50, shape = "Probabilidad 0.5")) +
   geom_linerange(aes(linetype = "Pronóstico 2021"), key_glyph = draw_key_path) +
   # scale_shape_discrete(guide = guide_legend(override.aes =
   #                                             list(linetype = c(0, 0, 0, 1), 
   #                                                  shape = c(15, 16, 17, NA)))) +
   labs(shape = "", fill = "", linetype = "") +
   theme_bw() +
-  facet_wrap(~name)
+  facet_wrap(~name) +
+  theme(legend.position = "top")
+ 
+ # guardar plot de barras
+ ggsave(filename = "plot_col.png", 
+        path = "plots/",
+        plot= plot_col, 
+        device = "png", 
+        height = 20, width = 28, units = "cm")
+ 
+ 
+ 
+ 
+ 
+ ggsave(filename = paste0("bandas_", estacion, '.png'),
+        plot = plot_bandas, device = 'png',
+        path = 'plots_resultado/',
+        units = 'cm', height = 16, width = 20, dpi = 300)  # height=14, width=12
+ 
 
 
 #1. calcular bandas para todos los pixeles
@@ -151,14 +178,14 @@ ggsave(filename = paste0("bandas_", estacion, '.png'),
 #5. hacer un mapa
 
 bandas <- cdr_hist |> 
- filter(between(month(date), 5, 10)) |> 
+ filter(between(month(date), 7, 9)) |> 
  group_by(month = month(date), name, x, y) |> 
  group_modify(~band_limits(.x$cdr, prob = probs) |> t() |> as.data.frame()) 
 
 
 cdr_pred21map <- bandas |> 
  left_join( cdr_y_pred |> 
-             filter(between(month(date), 5, 10)) |> 
+             filter(between(month(date), 7, 9)) |> 
              group_by(month = month(date), name, x, y) |> 
              summarise(pred = mean(pred_poly),
                        cdr = mean(cdr),
