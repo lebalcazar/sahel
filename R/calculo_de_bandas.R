@@ -96,7 +96,10 @@ ggplot(cdr_pred21) +
         legend.background = element_rect(colour = NA, fill = NA)) +
   labs(x = "", 
        y = "precipitation", 
-       color = "")
+       color = "") +
+geom_text(data = data_sum, 
+          aes(x = tipo, y = prc, label = prc), position = position_dodge(width = 0.9), 
+          size = 3, vjust = -1, hjust = 0.5, col = "black")
 
 # guardar plot
 ggsave(filename = "plot_bandas.png", 
