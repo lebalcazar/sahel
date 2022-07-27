@@ -115,7 +115,7 @@ ggsave(filename = "plot_bandas.png",
 
 ## Grafico de barras apiladas
 
-# plot_col <-
+plot_col <-
  ggplot(cdr_pred21) +
   aes(x = date,    
       y = pred,
@@ -136,13 +136,13 @@ ggsave(filename = "plot_bandas.png",
                                          "p30" = "Dry")), 
            mapping = aes(date, valor, fill = class), alpha = 0.6) +
  
-     ########
-   dplyr::group_by(name) %>% 
-   summarise(cdr = sum(cdr), 
-             pred = sum(pred), 
-             normal = sum(normal))
-   ########
- 
+   #   ########
+   # dplyr::group_by(name) %>% 
+   # summarise(cdr = sum(cdr), 
+   #           pred = sum(pred), 
+   #           normal = sum(normal))
+   # ########
+   # 
  
    scale_fill_manual(values = 
                          c("Wet"    = "blue", 
@@ -154,8 +154,10 @@ ggsave(filename = "plot_bandas.png",
                            "Dry"    = "Dry")) +
   geom_point(aes(y = normal, shape = "Normal 1991-2020")) +
   geom_point(aes(y = cdr, shape = "PERSIANN-CDR")) +
+   geom_point(aes(y = pred, shape = "pronostico")) +
+  scale_shape_manual(values = c(1,2,4)) +
   # geom_point(aes(y = p50, shape = "Probabilidad 0.5")) +
-  geom_linerange(aes(linetype = "Pronóstico 2021"), key_glyph = draw_key_path) +
+  # geom_linerange(aes(linetype = "Pronóstico 2021"), key_glyph = draw_key_path) +
   # scale_shape_discrete(guide = guide_legend(override.aes =
   #                                             list(linetype = c(0, 0, 0, 1), 
   #                                                  shape = c(15, 16, 17, NA)))) +
