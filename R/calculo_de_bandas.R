@@ -102,7 +102,7 @@ ggplot(cdr_pred21) +
 ggsave(filename = "plot_bandas.png", 
        plot = plot_bandas, device = 'png', 
        path = 'plots/', 
-       units = 'cm', height = 16, width = 20, dpi = 300)  # height=14, width=12
+       units = 'cm', height = 22, width = 22, dpi = 300)  # height=14, width=12
 
 # denscomp(param)
 # abline(v = lims, col = "blue")
@@ -112,15 +112,15 @@ ggsave(filename = "plot_bandas.png",
 
 ## Grafico de barras apiladas
 
-plot_col <-
+# plot_col <-
  ggplot(cdr_pred21) +
   aes(x = date,    
       y = pred,
       xmin = date - 13,
       xmax = date + 13
       ) +
-  geom_col(data = dplyr::select(cdr_pred21, date, name, p30, p50, p70) |> 
-            pivot_longer(cols = -c(date, name),  
+  geom_col(data = dplyr::select(cdr_pred21, date, name, p30, p50, p70, cdr, pred, normal) |> 
+            pivot_longer(cols = -c(date, name, cdr, pred, normal),  
                          names_to = "prob",
                          # names_pattern = "p(.+)",
                          # names_transform = list(prob = as.numeric),
@@ -131,8 +131,16 @@ plot_col <-
                                          "p70" = "Wet", 
                                          "p50" = "Medium", 
                                          "p30" = "Dry")), 
-           # mapping = aes(date, valor1, fill = class)) +
            mapping = aes(date, valor, fill = class), alpha = 0.6) +
+ 
+     ########
+   dplyr::group_by(name) %>% 
+   summarise(cdr = sum(cdr), 
+             pred = sum(pred), 
+             normal = sum(normal))
+   ########
+ 
+ 
    scale_fill_manual(values = 
                          c("Wet"    = "blue", 
                            "Medium" = "yellow", 
@@ -148,26 +156,25 @@ plot_col <-
   # scale_shape_discrete(guide = guide_legend(override.aes =
   #                                             list(linetype = c(0, 0, 0, 1), 
   #                                                  shape = c(15, 16, 17, NA)))) +
-  labs(shape = "", fill = "", linetype = "") +
+  labs(shape = "", fill = "", linetype = "", 
+       x = "", y = expression(paste("Precipitation (mm ", month^-1, ")"))) +
   theme_bw() +
   facet_wrap(~name) +
-  theme(legend.position = "top")
+  theme(legend.position = "bottom")
  
+plot_col
+
  # guardar plot de barras
  ggsave(filename = "plot_col.png", 
         path = "plots/",
         plot= plot_col, 
         device = "png", 
-        height = 20, width = 28, units = "cm")
+        height = 20, width = 25, units = "cm")
  
  
  
  
- 
- ggsave(filename = paste0("bandas_", estacion, '.png'),
-        plot = plot_bandas, device = 'png',
-        path = 'plots_resultado/',
-        units = 'cm', height = 16, width = 20, dpi = 300)  # height=14, width=12
+
  
 
 
@@ -178,28 +185,28 @@ plot_col <-
 #5. hacer un mapa
 
 bandas <- cdr_hist |> 
- filter(between(month(date), 7, 9)) |> 
+ filter(between(month(date), 5, 10)) |> 
  group_by(month = month(date), name, x, y) |> 
  group_modify(~band_limits(.x$cdr, prob = probs) |> t() |> as.data.frame()) 
 
 
 cdr_pred21map <- bandas |> 
  left_join( cdr_y_pred |> 
-             filter(between(month(date), 7, 9)) |> 
+             filter(between(month(date), 5, 10)) |> 
              group_by(month = month(date), name, x, y) |> 
              summarise(pred = mean(pred_poly),
                        cdr = mean(cdr),
                        .groups = "drop")) |> 
- mutate(clase = case_when(pred > p70 ~ "Alto",
-                          pred < p30 ~ "Bajo",
-                          TRUE ~ "Medio") |> 
-         factor(levels = c("Bajo", "Medio", "Alto")))
+ mutate(clase = case_when(pred > p70 ~ "Over",
+                          pred < p30 ~ "Low",
+                          TRUE ~ "Medium") |> 
+         factor(levels = c("Low", "Medium", "Over")))
 # cdr_pred21map
 
 # 20 estaciones meteorológicas
 ubcEst <- st_read('data/vector_dpkg/ubc_est20.gpkg')
 
-# mapa 
+mapa <- 
 ggplot(cdr_pred21map) +
   aes(x, y) +
   geom_tile(aes(fill = clase)) +
@@ -212,6 +219,13 @@ ggplot(cdr_pred21map) +
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(), 
         legend.position = c(0.85, 0.85), 
-        axis.text = element_text(size = 12))
+        axis.text = element_text(size = 12)) +
+  labs(x = "Longitude", y = "Latitude", fill = "class")
+mapa
+ggsave(filename = "mapa_clases_pronostico.png", 
+       plot = mapa, 
+       path = "plots/", 
+       device = "png", height = 9, width = 8, dpi = 300)
+
 
 
