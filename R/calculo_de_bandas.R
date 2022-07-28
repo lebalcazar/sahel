@@ -125,7 +125,7 @@ ggsave(filename = "plot_bandas.png",
                  values_to = "prc") %>% 
     dplyr::group_by(name, tipo) %>% 
     dplyr::summarise(y = max(prc) |> round(0),
-                     prc = sum(prc),
+                     prc = sum(prc) |> round(0),
                     .groups = "drop_last") %>%
    dplyr::summarise(y = max(y),
                     date = as.Date("2021-05-01"),
