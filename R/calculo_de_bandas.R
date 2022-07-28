@@ -117,17 +117,20 @@ ggsave(filename = "plot_bandas.png",
   data_sum <-
     cdr_pred21 %>% 
     # dplyr::filter(name == "Tidjikja") %>% 
-    dplyr::select(date, name, cdr, pred, normal) %>%  
+    dplyr::select(date, name, 'PERSSIAN-CDR' = cdr, PREDICTION = pred, "Normal" = normal) %>%  
     pivot_longer(cols = -c(date, name),  
                  names_to = "tipo",
                  # names_pattern = "p(.+)",
                  # names_transform = list(prob = as.numeric),
                  values_to = "prc") %>% 
     dplyr::group_by(name, tipo) %>% 
-    dplyr::summarise(prc = sum(prc) %>% round(0)) %>% 
-    dplyr::mutate(date = seq(as.Date("2021-05-01"),
-                             as.Date("2021-07-01"),
-                             by = "month"))
+    dplyr::summarise(y = max(prc) |> round(0),
+                     prc = sum(prc),
+                    .groups = "drop_last") %>%
+   dplyr::summarise(y = max(y),
+                    date = as.Date("2021-05-01"),
+                    label = glue::glue("{a}", a = paste0("", tipo, ": ", prc, 
+                                        "\n", collapse = "")))
     
   
   # data_sum <-  cdr_pred21 %>% 
@@ -143,7 +146,7 @@ ggsave(filename = "plot_bandas.png",
   
 ## Grafico de barras apiladas
 
-plot_col <-
+#plot_col <-
  ggplot(cdr_pred21) +
   aes(x = date,    
       y = pred,
@@ -184,27 +187,32 @@ plot_col <-
   labs(shape = "", fill = "", linetype = "", 
        x = "", y = expression(paste("Precipitation (mm ", month^-1, ")"))) +
   theme_bw() +
-  facet_wrap(~name) +
+  facet_wrap(~name, scales = "free_y") +
   # annotate("text", label = "text", x = as.Date("2021-05-01"), y = 400) +
    # geom_text(data = data_sum,
    #           aes(x = as.Date("2021-05-01"), y = prc, label = prc), position = position_dodge(width = 0.9), 
    #           size = 3, vjust = -1, hjust = 0.5, col = "black") +
 
     geom_text(data = data_sum,
-                    aes(x = as.Date("2021-05-01"), y = -Inf, label = prc), 
-                    position = position_dodge(width = 0.9), 
-                    size = 3, vjust = -1, hjust = 0.5, col = "black") +
+                    aes(x = as.Date("2021-05-01") - days(15), y = y, label = label), 
+                    position = position_identity(), 
+                    size = 2, vjust = 1, hjust = 0, col = "black") +
   theme(legend.position = "bottom")
  
   plot_col
-
+  ggplot() +
+  annotate("text", 
+           x = data_sum$date, 
+           y = data_sum$y, 
+           label = data_sum$label, 
+            size = 3, vjust = 1, hjust = 0, col = "black")
+  
  # guardar plot de barras
  ggsave(filename = "plot_col.png", 
         path = "plots/",
         plot= plot_col, 
         device = "png", 
         height = 20, width = 25, units = "cm")
- 
  
  
  
