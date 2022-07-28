@@ -1,4 +1,4 @@
-library(fitdistrplus)
+`library(fitdistrplus)
 library(lubridate)
 library(tidyverse)
 library(sf)
@@ -130,7 +130,7 @@ ggsave(filename = "plot_bandas.png",
    dplyr::summarise(y = max(y),
                     date = as.Date("2021-05-01"),
                     label = glue::glue("{a}", a = paste0("", tipo, ": ", prc, 
-                                        "[mm] \n", collapse = "")))
+                                        " [mm] \n", collapse = "")))
     
   
   # data_sum <-  cdr_pred21 %>% 
@@ -146,7 +146,7 @@ ggsave(filename = "plot_bandas.png",
   
 ## Grafico de barras apiladas
 
-#plot_col <-
+plot_col <-
  ggplot(cdr_pred21) +
   aes(x = date,    
       y = pred,
