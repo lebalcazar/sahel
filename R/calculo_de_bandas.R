@@ -73,7 +73,7 @@ cdr_pred21 <-
  # bind_cols(bandas)
   left_join(bandas, by = c("month", "name", "x", "y"))
 
-plot_bandas <-
+# plot_bandas <-
 ggplot(cdr_pred21) +
   aes(x = date, y = pred) +
   geom_ribbon(aes(ymin = p30, ymax = p70, fill = "bands 0.30, 0.70"), alpha = 0.3) +
@@ -82,7 +82,7 @@ ggplot(cdr_pred21) +
   geom_line(aes(y = p50, color = "Montly median")) +
   # geom_line(aes(y = cdr, color = "PERSIANN-CDR 2021")) +
   geom_point(aes(color = "Prediction")) +
-  facet_wrap(~name) +
+  facet_wrap(~name)
   # annotate(geom = "text", 
   #          x = as.Date(paste0("2021-", cdr_pred21$month, "-01")), 
   #          y = max(cdr_pred21$p70), 
@@ -97,9 +97,7 @@ ggplot(cdr_pred21) +
   labs(x = "", 
        y = "precipitation", 
        color = "") +
-geom_text(data = data_sum, 
-          aes(x = tipo, y = prc, label = prc), position = position_dodge(width = 0.9), 
-          size = 3, vjust = -1, hjust = 0.5, col = "black")
+
 
 # guardar plot
 ggsave(filename = "plot_bandas.png", 
@@ -113,14 +111,44 @@ ggsave(filename = "plot_bandas.png",
 # abline(v = mean(cdr_pred21$cdr), col = "green")
 
 
+  
+#   ########
+  # suma de periodo húmedo may-oct: sum_CDR, sum_NORMAL, sum_PRONÓSTICO
+  data_sum <-
+    cdr_pred21 %>% 
+    # dplyr::filter(name == "Tidjikja") %>% 
+    dplyr::select(date, name, cdr, pred, normal) %>%  
+    pivot_longer(cols = -c(date, name),  
+                 names_to = "tipo",
+                 # names_pattern = "p(.+)",
+                 # names_transform = list(prob = as.numeric),
+                 values_to = "prc") %>% 
+    dplyr::group_by(name, tipo) %>% 
+    dplyr::summarise(prc = sum(prc) %>% round(0)) %>% 
+    dplyr::mutate(date = seq(as.Date("2021-05-01"),
+                             as.Date("2021-07-01"),
+                             by = "month"))
+    
+  
+  # data_sum <-  cdr_pred21 %>% 
+  #   dplyr::group_by(date, name) %>%
+  #   dplyr::summarise(date = date, 
+  #                    cdr = sum(cdr),
+  #                    pred = sum(pred),
+  #                    normal = sum(normal))
+# ########
+  # 
+  
+  
+  
 ## Grafico de barras apiladas
 
 plot_col <-
  ggplot(cdr_pred21) +
   aes(x = date,    
       y = pred,
-      xmin = date - 13,
-      xmax = date + 13
+      # xmin = date - 13,
+      # xmax = date + 13
       ) +
   geom_col(data = dplyr::select(cdr_pred21, date, name, p30, p50, p70, cdr, pred, normal) |> 
             pivot_longer(cols = -c(date, name, cdr, pred, normal),  
@@ -135,15 +163,7 @@ plot_col <-
                                          "p50" = "Medium", 
                                          "p30" = "Dry")), 
            mapping = aes(date, valor, fill = class), alpha = 0.6) +
- 
-   #   ########
-   # dplyr::group_by(name) %>% 
-   # summarise(cdr = sum(cdr), 
-   #           pred = sum(pred), 
-   #           normal = sum(normal))
-   # ########
-   # 
- 
+
    scale_fill_manual(values = 
                          c("Wet"    = "blue", 
                            "Medium" = "yellow", 
@@ -154,7 +174,7 @@ plot_col <-
                            "Dry"    = "Dry")) +
   geom_point(aes(y = normal, shape = "Normal 1991-2020")) +
   geom_point(aes(y = cdr, shape = "PERSIANN-CDR")) +
-   geom_point(aes(y = pred, shape = "pronostico")) +
+  geom_point(aes(y = pred, shape = "pronostico")) +
   scale_shape_manual(values = c(1,2,4)) +
   # geom_point(aes(y = p50, shape = "Probabilidad 0.5")) +
   # geom_linerange(aes(linetype = "Pronóstico 2021"), key_glyph = draw_key_path) +
@@ -165,9 +185,18 @@ plot_col <-
        x = "", y = expression(paste("Precipitation (mm ", month^-1, ")"))) +
   theme_bw() +
   facet_wrap(~name) +
+  # annotate("text", label = "text", x = as.Date("2021-05-01"), y = 400) +
+   # geom_text(data = data_sum,
+   #           aes(x = as.Date("2021-05-01"), y = prc, label = prc), position = position_dodge(width = 0.9), 
+   #           size = 3, vjust = -1, hjust = 0.5, col = "black") +
+
+    geom_text(data = data_sum,
+                    aes(x = as.Date("2021-05-01"), y = -Inf, label = prc), 
+                    position = position_dodge(width = 0.9), 
+                    size = 3, vjust = -1, hjust = 0.5, col = "black") +
   theme(legend.position = "bottom")
  
-plot_col
+  plot_col
 
  # guardar plot de barras
  ggsave(filename = "plot_col.png", 
