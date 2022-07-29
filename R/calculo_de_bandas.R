@@ -117,7 +117,7 @@ ggsave(filename = "plot_bandas.png",
   data_sum <-
     cdr_pred21 %>% 
     # dplyr::filter(name == "Tidjikja") %>% 
-    dplyr::select(date, name, 'PERSSIAN-CDR' = cdr, PREDICTION = pred, "Normal" = normal) %>%  
+    dplyr::select(date, name, 'PERSSIAN-CDR' = cdr, Forecast = pred, "Normal" = normal) %>%  
     pivot_longer(cols = -c(date, name),  
                  names_to = "tipo",
                  # names_pattern = "p(.+)",
@@ -146,7 +146,7 @@ ggsave(filename = "plot_bandas.png",
   
 ## Grafico de barras apiladas
 
-#plot_col <-
+plot_col <-
  ggplot(cdr_pred21) +
   aes(x = date,    
       y = pred,
@@ -172,12 +172,12 @@ ggsave(filename = "plot_bandas.png",
                            "Medium" = "yellow", 
                            "Dry"    = "red"), 
                        labels = 
-                         c("Wet"    = "Wet", 
-                           "Medium" = "Medium", 
-                           "Dry"    = "Dry")) +
-  geom_point(aes(y = normal, shape = "Normal 1991-2020")) +
+                         c("Wet"    = "Over normal", 
+                           "Medium" = "Around normal", 
+                           "Dry"    = "Below normal")) +
+  geom_point(aes(y = normal, shape = "Normal (1991-2020)")) +
   geom_point(aes(y = cdr, shape = "PERSIANN-CDR")) +
-  geom_point(aes(y = pred, shape = "pronostico")) +
+  geom_point(aes(y = pred, shape = "Forecast")) +
   scale_shape_manual(values = c(1,2,4)) +
   # geom_point(aes(y = p50, shape = "Probabilidad 0.5")) +
   # geom_linerange(aes(linetype = "Pronóstico 2021"), key_glyph = draw_key_path) +
@@ -187,19 +187,29 @@ ggsave(filename = "plot_bandas.png",
   labs(shape = "", fill = "", linetype = "", 
        x = "", y = expression(paste("Precipitation (mm ", month^-1, ")"))) +
   theme_bw() +
-  facet_wrap(~name, scales = "free_y") +
+  facet_wrap(~name) + # scales = "free_y"
   # annotate("text", label = "text", x = as.Date("2021-05-01"), y = 400) +
    # geom_text(data = data_sum,
    #           aes(x = as.Date("2021-05-01"), y = prc, label = prc), position = position_dodge(width = 0.9), 
    #           size = 3, vjust = -1, hjust = 0.5, col = "black") +
 
     geom_text(data = data_sum,
-                    aes(x = as.Date("2021-05-01") - days(15), y = y, label = label), 
+                    aes(x = as.Date("2021-05-01") - days(15), y = 490, label = label), 
                     position = position_identity(), 
                     size = 2, vjust = 1, hjust = 0, col = "black") +
   theme(legend.position = "bottom")
  
   plot_col
+  
+
+  # guardar plot
+  ggsave(filename = "plot_col_.png", 
+         plot = plot_col, device = 'png', 
+         path = 'plots/', 
+         units = 'cm', height = 18, width = 30, dpi = 300)  # height=14, width=12
+  
+  
+  
   ggplot() +
   annotate("text", 
            x = data_sum$date, 
@@ -239,10 +249,10 @@ cdr_pred21map <- bandas |>
              summarise(pred = mean(pred_poly),
                        cdr = mean(cdr),
                        .groups = "drop")) |> 
- mutate(clase = case_when(pred > p70 ~ "Over",
-                          pred < p30 ~ "Low",
-                          TRUE ~ "Medium") |> 
-         factor(levels = c("Low", "Medium", "Over")))
+ mutate(clase = case_when(pred > p70 ~ "Wet",
+                          pred < p30 ~ "Dry",
+                          TRUE ~ "Normal") |> 
+         factor(levels = c("Dry", "Normal", "Wet")))
 # cdr_pred21map
 
 # 20 estaciones meteorológicas
@@ -264,10 +274,10 @@ ggplot(cdr_pred21map) +
         axis.text = element_text(size = 12)) +
   labs(x = "Longitude", y = "Latitude", fill = "class")
 mapa
-ggsave(filename = "mapa_clases_pronostico.png", 
+ggsave(filename = "mapa_clases_pronostico_.png", 
        plot = mapa, 
        path = "plots/", 
-       device = "png", height = 9, width = 8, dpi = 300)
+       device = "png", height = 16, width = 16, dpi = 300, units = "cm")
 
 
 
