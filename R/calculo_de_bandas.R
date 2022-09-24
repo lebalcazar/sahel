@@ -1,40 +1,13 @@
-`library(fitdistrplus)
+library(fitdistrplus)
 library(lubridate)
 library(tidyverse)
 library(sf)
+source("R/functions.R")
 
-band_limits <- function(x, 
-                        prob = c(0.25, 0.5, 0.75), 
-                        distr = "gamma"){
- method = c("mle", "mme", "qme", "mge", "mse")
- param = "error"
- i = 1
- while("error" %in% param){
-  if(i > length(method)) stop("No fue posible ajustar la función")
-  tryCatch(
-   param <- fitdistrplus::fitdist(x, distr = distr, method = method[i]),
-   error = function(e) "error"
-  )
-  i = i + 1
- }
- 
- if("error" %in% param) {
-  lims <- rep(NA, length(prob) + 1)
-  return(setNames(lims, c(paste0("p", prob * 100), "normal")))
- }
- 
- lims <- match.fun(paste0("q", distr))(
-  prob, 
-  shape = param$estimate["shape"], 
-  rate = param$estimate["rate"])
- setNames(c(lims, mean(x)), c(paste0("p", prob * 100), "normal"))
-}
-# fin de función
-
-# datos históricos CDR
+# Historical CDR data
 cdr_hist <- read_rds("data/rds/pronostico_poly_mensual.rds")  %>% 
  dplyr::select(-pred_poly) %>% 
-  dplyr::filter(lubridate::year(date) >= 1991)  # nueva normal según PRESAO 2021 
+  dplyr::filter(lubridate::year(date) >= 1991)  # normal according PRESAO 2021 
 
 probs <- c(0.30, 0.5, 0.70)
 # estacion <- "Labe"
@@ -44,7 +17,7 @@ cdr_test <- cdr_hist |>
     # name == estacion, 
     name != "other", 
     between(month(date), 5, 10), 
-    lubridate::year(date) >= 1991)  # nueva normal según PRESAO 2021
+    lubridate::year(date) >= 1991)  # normal according PRESAO 2021 
 
 bandas <- group_by(cdr_test, month = month(date), name, x, y) |> 
  # group_map(~band_limits(.x$cdr, prob = probs)) |> 
@@ -99,21 +72,17 @@ ggplot(cdr_pred21) +
        color = "") +
 
 
-# guardar plot
+# Save plot
 ggsave(filename = "plot_bandas.png", 
-       plot = plot_bandas, device = 'png', 
-       path = 'plots/', 
-       units = 'cm', height = 22, width = 22, dpi = 300)  # height=14, width=12
-
-# denscomp(param)
-# abline(v = lims, col = "blue")
-# abline(v = mean(cdr_test$cdr), col = "orange")
-# abline(v = mean(cdr_pred21$cdr), col = "green")
+       plot = plot_bandas, 
+       device = 'png', 
+       path = 'outputs/plots/', 
+       units = 'cm', height = 22, width = 22, dpi = 300) 
 
 
   
 #   ########
-  # suma de periodo húmedo may-oct: sum_CDR, sum_NORMAL, sum_PRONÓSTICO
+  # accumulate the humid period may-oct: sum_CDR, sum_NORMAL, sum_PRONÓSTICO
   data_sum <-
     cdr_pred21 %>% 
     # dplyr::filter(name == "Tidjikja") %>% 
@@ -144,7 +113,7 @@ ggsave(filename = "plot_bandas.png",
   
   
   
-## Grafico de barras apiladas
+## Stacked bars plot
 
 plot_col <-
  ggplot(cdr_pred21) +
@@ -217,9 +186,9 @@ plot_col <-
            label = data_sum$label, 
             size = 3, vjust = 1, hjust = 0, col = "black")
   
- # guardar plot de barras
+ # Save stacked bar plot
  ggsave(filename = "plot_col.png", 
-        path = "plots/",
+        path = "outputs/plots/",
         plot= plot_col, 
         device = "png", 
         height = 20, width = 25, units = "cm")
@@ -227,22 +196,20 @@ plot_col <-
  
  
 
- 
+# STEPS TO APPLY THE SAME PROCESS BEFORE TO ALL PIXELS
+#1. Calculate bands for each pixel
+#2. Calculate the mean for the humid period for each pixel in the map
+#3. Tables join.
+#4. Assign clase ("Low", "Medium", "Over") to each pixel
+#5. Plot map
 
-
-#1. calcular bandas para todos los pixeles
-#2. calcular el promedio humedo para todos los pixeles (mapa)
-#3. unir las dos tablas.
-#4. calcular clase (alto, medio, bajo)
-#5. hacer un mapa
-
-bandas <- cdr_hist |> 
+bands <- cdr_hist |> 
  filter(between(month(date), 5, 10)) |> 
  group_by(month = month(date), name, x, y) |> 
  group_modify(~band_limits(.x$cdr, prob = probs) |> t() |> as.data.frame()) 
 
 
-cdr_pred21map <- bandas |> 
+cdr_pred21map <- bands |> 
  left_join( cdr_y_pred |> 
              filter(between(month(date), 5, 10)) |> 
              group_by(month = month(date), name, x, y) |> 
@@ -255,7 +222,7 @@ cdr_pred21map <- bandas |>
          factor(levels = c("Dry", "Normal", "Wet")))
 # cdr_pred21map
 
-# 20 estaciones meteorológicas
+# 20 meteorological stations
 ubcEst <- st_read('data/vector_dpkg/ubc_est20.gpkg')
 
 mapa <- 
@@ -282,8 +249,12 @@ mapa
 ggsave(filename = "mapa_clases_pronostico_2.png", 
        plot = mapa, 
        path = "plots/", 
+<<<<<<< HEAD
        device = "png", height = 16, width = 16, dpi = 300, units = "cm")
 
 
 # 
 
+=======
+       device = "png", height = 9, width = 8, dpi = 300)
+>>>>>>> 0f5608a (Mover función band_limits a R/functions.R e inicio de la traducción a inglés)
