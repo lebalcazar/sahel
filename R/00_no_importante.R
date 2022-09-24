@@ -65,9 +65,10 @@ pron_mes <- readRDS("data/rds/pronostico_poly_mensual.rds")
 # predicción 2021 
 datos1 <- left_join(sst_2020_2021, coef_prc_poly, by = c("reg_sst" = "which")) %>% 
   group_by(x, y) %>% 
-  mutate(pred_poly = b0 + b2*lag(sst, 11)^2 + b1*lag(sst, 11)) %>%   #, 
-  # pred_sw = b0 + sst*sst_c + nino12*nino12_c + mslp*mslp_c)
-  mutate(pred_poly = ifelse(pred_poly < 0, 0, pred_poly))
+  mutate(pred_poly = b0 + b2*lag(sst, 11)^2 + b1*lag(sst, 11)) %>%   # con lag
+  # mutate(pred_poly = b0 + b2*(sst^2) + b1*sst) %>%   # sin lag
+  pred_sw = b0 + sst*sst_c + nino12*nino12_c + mslp*mslp_c)
+# mutate(pred_poly = ifelse(pred_poly < 0, 0, pred_poly))
 
 
 # CDR historico 
@@ -89,6 +90,8 @@ cdr_hist %>%
 plot(cdr)
 
 
+
+pronostico_poly_mensual.rds
 
 
 
