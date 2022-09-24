@@ -75,3 +75,10 @@ nDatos <- function(obs, cal){
  n = ifelse(!is.na(obs) & !is.na(cal),1,0)
  sum(n)
 }
+
+
+# error_relativo
+RE <- function(obs, cal){
+ num = abs(obs - cal)
+ er = (num/cal) * 100
+}

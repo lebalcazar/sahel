@@ -249,12 +249,4 @@ mapa
 ggsave(filename = "mapa_clases_pronostico_2.png", 
        plot = mapa, 
        path = "plots/", 
-<<<<<<< HEAD
        device = "png", height = 16, width = 16, dpi = 300, units = "cm")
-
-
-# 
-
-=======
-       device = "png", height = 9, width = 8, dpi = 300)
->>>>>>> 0f5608a (Mover función band_limits a R/functions.R e inicio de la traducción a inglés)

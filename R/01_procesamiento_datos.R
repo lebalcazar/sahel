@@ -66,7 +66,7 @@ tbl <- dat %>%
   dplyr::select(x, y, name, date, cdr)
 
 # guardar
-saveRDS(tbl, "/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/sahel/data/rds/cdr2021_por_pixel.rds")
+saveRDS(tbl, "data/rds/cdr2021_por_pixel.rds")
 
 
 # ecuaciones
