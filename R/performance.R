@@ -1,9 +1,10 @@
-# performance
-# evalua los datos de pronostico de lluvia con los datos 
-# PERSIANN-CDR. Evaluación con datos mensuales. 
+# Script to evaluate the performance of the forecast with
+# PERSIANN-CDR. Monthly data evaluation. 
 
 library(tidyverse)
+source("R/functions.R")
 
+<<<<<<< HEAD
 # funciones 
 # error medio
 mae <-function(obs, cal) mean(abs(cal - obs), na.rm = T)
@@ -68,10 +69,16 @@ RE <- function(obs, cal){
 
 # Leer los datos pronosticos 2021 y unir con la ubicación de las coordendas que 
 # contienen los nombres de los punto-pixeles
+=======
+# Leer los datos pronosticos 2021
+>>>>>>> 90a8773 (Mover functions a fichero R/Functions.R)
 
 pronostico_poly_2021 <- read_rds("data/rds/pronostico_poly_2021.rds")
 coorEstCnc <- read_rds("data/rds/coorEstCnc.rds")
 cdr_2021 <- read_rds("data/rds/cdr_2021.rds")
+
+# Unir con la ubicación de las coordendas que 
+# contienen los nombres de los punto-pixeles
 
 data <- left_join(pronostico_poly_2021, coorEstCnc, by = c("x", "y")) %>%
   left_join(cdr_2021, by = c("date", "x", "y", "name")) %>% 
