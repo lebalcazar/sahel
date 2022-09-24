@@ -9,7 +9,7 @@ library(terra)
 
 
 # abrir el archivo nc
-nc <- ncdf4::nc_open("/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/sahel/data/nc/sst_nc/nc_2020_2021.nc")
+nc <- ncdf4::nc_open("data/nc/sst_nc/nc_2020_2021.nc")
 
 # # nombrar las variables del nc
 # ncdf4.helpers::nc.get.dim.names(nc)
@@ -61,7 +61,7 @@ rr_stack <- rotate(r_stack)
 
 # recortar para el área de estudio 
 # vector obtenido por ACP y análiis cluster
-sst_poligonos <- st_read("/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/lbo_doc/resultados/PCA_SST_componentes/shp_cluster_poli/sst_recorte.shp")
+sst_poligonos <- st_read("data/gpkg/vector_layers.gpkg", layer = "Study area")
 sst_poligonos_vec <- vect(sst_poligonos)
 
 # recortar 
