@@ -59,6 +59,11 @@ nDatos <- function(obs, cal){
   return(t)
 }
 
+# error_relativo
+RE <- function(obs, cal){
+  num = abs(obs - cal)
+  er = (num/cal) * 100
+}
 
 
 # Leer los datos pronosticos 2021 y unir con la ubicación de las coordendas que 
@@ -73,8 +78,9 @@ data <- left_join(pronostico_poly_2021, coorEstCnc, by = c("x", "y")) %>%
   dplyr::select(date, name, x, y, pred = pred_poly, cdr) %>% 
   dplyr::filter(name != "other", 
                 date >= "2021-01-01", 
-                lubridate::month(date) >= 7 & lubridate::month(date) <= 9) %>% 
-  filter(!name %in% c("Tidjikja", "Kedougou", "Kiffa", "Matam")) %>%
+                lubridate::month(date) >= 5 & lubridate::month(date) <= 10
+                ) %>% 
+  # filter(!name %in% c("Tidjikja", "Kedougou", "Kiffa", "Matam")) %>%
   arrange(name)
 
 
@@ -86,6 +92,7 @@ data %>%
             pbias = pBias(cdr, pred) %>% round(1), 
             r = r(cdr, pred) %>% round(3),
             r2 = r2(cdr, pred) %>% round(3), 
+            nse = nse(cdr, pred) %>% round(3),
             n = nDatos(cdr, pred))
 
 performance %>% select(r2) %>% colMeans()
