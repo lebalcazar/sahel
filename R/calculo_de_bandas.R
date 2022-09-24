@@ -272,9 +272,14 @@ ggplot(cdr_pred21map) +
         panel.grid.minor = element_blank(), 
         legend.position = c(0.85, 0.85), 
         axis.text = element_text(size = 12)) +
-  labs(x = "Longitude", y = "Latitude", fill = "class")
+  scale_fill_continuous(
+    Dry = "red", 
+    Normal = "yellow", 
+    Wet = "blue"
+  ) +
+  labs(x = "Longitude", y = "Latitude", fill = "Legend")
 mapa
-ggsave(filename = "mapa_clases_pronostico_.png", 
+ggsave(filename = "mapa_clases_pronostico_2.png", 
        plot = mapa, 
        path = "plots/", 
        device = "png", height = 16, width = 16, dpi = 300, units = "cm")
