@@ -1,6 +1,6 @@
-# procesar datos de pronóstico 
+# Script to forecast data processing 
 library(tidyverse)
-library(lubridate)
+#library(lubridate)
 library(fitdistrplus)
 library(terra)
 library(sf)
@@ -44,7 +44,7 @@ writeRaster(x = rst_msk,
             bylayer = T)
 
 # estaciones 
-coorEstCnc <- readRDS('/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/sahel/data/rds/coorEstCnc.rds') %>% as_tibble()
+coorEstCnc <- readRDS('sahel/data/rds/coorEstCnc.rds') %>% as_tibble()
             
 cdr2021_tbl <- rasterToPoints(rst_msk, xyFromCell = TRUE) %>% as_tibble()
 

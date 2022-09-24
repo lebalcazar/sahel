@@ -1,5 +1,4 @@
-# se leen los datos preprocesados 
-# datos estan en la carpeta data/rds del proyecto Sahel
+# Reading pre-processed data from data/rds
 
 library(tidyverse)
 library(lubridate)
@@ -7,7 +6,7 @@ library(fitdistrplus)
 library(terra)
 library(pROC)
 
-# leer los datos históricos de persiann-cdr desde el archivo pronostico_poly
+# load persiann-cdr forecast data - Polinomial
 cdr_hist <- read_rds("data/rds/pronostico_poly_mensual.rds")  %>% 
  dplyr::select(-pred_poly)
 
@@ -15,7 +14,7 @@ cdr_hist <- read_rds("data/rds/pronostico_poly_mensual.rds")  %>%
 cdr_2021 <- read_rds("data/rds/cdr_2021.rds")
 
 
-# pronostico 2021
+# Forecast 2021
 pronost_2021 <- read_rds("data/rds/pronostico_poly_2021.rds") %>% 
  dplyr::select(date, x, y, pred_poly)
 
@@ -35,20 +34,20 @@ cdr_y_pred %>%
  summary()
 
 
-# obetener la normal climática con los datos PERSIANN-CDR 1983-2020
+# Get climate normal from PERSIANN-CDR 1983-2020
 normal_c <- 
  cdr_hist  %>%  
  group_by(name, month = month(date), id_xy) %>%  
  summarise(pmean = mean(cdr, na.rm = TRUE), 
-           # calcular n percentiles
-           q1 = quantile(cdr, 0.10),         # cuantil1
-           q3 = quantile(cdr, 0.90),         # cuantil3
-           psd = sd(cdr, na.rm = TRUE),      # desviación estándar
-           ci = qnorm(1-0.025) * (psd/n()),  # intervalo de confianza
-           se = psd/n()                      # error estandar de la media
+           # Calculate n percentiles
+           q1 = quantile(cdr, 0.10),         # Quantile 0.1
+           q3 = quantile(cdr, 0.90),         # Quantile 0.9
+           psd = sd(cdr, na.rm = TRUE),      # Standard deviation
+           ci = qnorm(1-0.025) * (psd/n()),  # confidence interval
+           se = psd/n()                      # Standard error from mean
  )
 
-# CDR 1 estación 
+# CDR for 1 station
 cdr_2021_1est <- cdr_y_pred %>% 
  dplyr::filter(name == "Bakel",
                month(date) >= 5, month(date) <= 10) %>% 
@@ -72,7 +71,7 @@ normal_bakel <- normal_c |>
  ) 
 
 
-# valor de AUC para un punto
+# AUC for single coordinate
 #normal_bakel %>% 
 # summarise(auc = auc(mapa_extract, clase), 
 #           id_xy = unique(id_xy))
