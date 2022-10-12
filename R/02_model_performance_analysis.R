@@ -60,18 +60,5 @@ p <-
 # tables
     
     
-    
-    
-# crear un rater rapido
-library(terra)   
-r <- rast(nrows = length(cells$x), ncols = length(cells$y), xmin = -13.875, xmax = -4.625, ymin = 9.375, ymax = 19.875)
-cells <-  mdl_perf_best %>% ungroup() %>% dplyr::select(x, y)
-xy <- cellFromXY(r, xy)
-ncell(r) <- cells
 
 
-r <- rast()
-
-xFromCol(r, c(1, 120, 180))
-yFromRow(r, 90)
-xyFromCell(r, cells[, c("x", "y")])
