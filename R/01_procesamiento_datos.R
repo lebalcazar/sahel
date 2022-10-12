@@ -6,6 +6,8 @@ library(terra)
 library(sf)
 library(raster)
 
+# XXXXXXXXXXXXXXXXXXXXXXXXXXX
+
 # leer datos de pronostico desde proyeto lbo_doc:
 # "/home/luisbalcazar/Documentos/lbo_doc/resultados/datos_preProceso/datos_f.rds"
 
@@ -23,7 +25,7 @@ library(raster)
 # datos_pron <- read_rds("../lbo_doc/resultados/pronostico_prc_rds_por_pixel/pronostico_poly_mensual.rds")
 
 # datos PERSIANN 2021 
-lf <- list.files("/media/luis/644bedd8-fbc1-476d-9939-a613c80145d9/luisbalcazar/Documentos/04SIG/01Rawdata/Prc/cdr_global/mes/PERSIANN-CDR_mensual_global_Tif/CDR_2022-07-04033154pm", 
+lf <- list.files("~/Documentos/04SIG/01Rawdata/Prc/cdr_global/mes/PERSIANN-CDR_mensual_global_Tif/CDR_2022-07-04033154pm", 
                  pattern = ".tif$", full.names = TRUE, all.files = TRUE)
 rst_21 <- raster::stack(lf)
 
