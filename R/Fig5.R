@@ -1,6 +1,6 @@
 library(tidyverse)
 library(extrafont)
-extrafont::ttf_import("data/ttf/Palatino Linotype.ttf")
+loadfonts(quiet = TRUE)
 
 # best model performance 
 performance_best <- read_csv("outputs/models/model_performance.csv") %>% 
