@@ -40,6 +40,6 @@ ggplot() +
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank()) 
 
-
+# save last plot
 ggsave(filename = 'outputs/plots/fig3.png', plot = last_plot(), device = 'png', 
       units = 'cm', height = 18, width = 14, dpi = 300)

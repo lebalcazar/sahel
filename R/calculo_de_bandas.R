@@ -203,19 +203,24 @@ plot_col <-
 #4. Assign clase ("Low", "Medium", "Over") to each pixel
 #5. Plot map
 
-bands <- cdr_hist |> 
+bandas <- cdr_hist |> 
  filter(between(month(date), 5, 10)) |> 
  group_by(month = month(date), name, x, y) |> 
  group_modify(~band_limits(.x$cdr, prob = probs) |> t() |> as.data.frame()) 
 
+cdr_y_pred <- mutate(cdr_y_pred, month = lubridate::month(date))
 
-cdr_pred21map <- bands |> 
- left_join( cdr_y_pred |> 
-             filter(between(month(date), 5, 10)) |> 
-             group_by(month = month(date), name, x, y) |> 
-             summarise(pred = mean(pred_poly),
-                       cdr = mean(cdr),
-                       .groups = "drop")) |> 
+cdr_pred21map <- bandas %>% 
+  ungroup() %>% 
+  left_join( cdr_y_pred, by = c("x", "y", "name", "month")) %>% 
+  filter(between(month(date), 5, 10)) %>%  
+  dplyr::group_by(name, x, y) %>%   # se quitó month = month(date),
+  dplyr::summarise(pred = sum(pred_poly),
+                   cdr = sum(cdr), 
+                   p30 = sum(p30), 
+                   p50 = sum(p50),
+                   p70 = sum(p70),
+                   .groups = "drop") %>%  
  mutate(clase = case_when(pred > p70 ~ "Wet",
                           pred < p30 ~ "Dry",
                           TRUE ~ "Normal") |> 
@@ -223,10 +228,14 @@ cdr_pred21map <- bands |>
 # cdr_pred21map
 
 # 20 meteorological stations
-ubcEst <- st_read('data/vector_dpkg/ubc_est20.gpkg')
+ubcEst <- st_read("data/gpkg/vector_layers.gpkg", layer = "ubc_est20")
 
-mapa <- 
-ggplot(cdr_pred21map) +
+mapa <-
+  cdr_pred21map %>% 
+  # group_by(x, y, name) %>%
+  # summarise(s_pred = sum(pred), s_normal = sum(normal)) %>% 
+  # mutate(clase = ifelse(s_pred > s_normal, "wet", "dry")) %>% 
+ggplot() +
   aes(x, y) +
   geom_tile(aes(fill = clase)) +
   coord_equal() +
@@ -239,14 +248,14 @@ ggplot(cdr_pred21map) +
         panel.grid.minor = element_blank(), 
         legend.position = c(0.85, 0.85), 
         axis.text = element_text(size = 12)) +
-  scale_fill_continuous(
-    Dry = "red", 
-    Normal = "yellow", 
-    Wet = "blue"
+  scale_fill_manual(values = c(
+    Dry = "#f5686c", # "red", 
+    Normal = "#f9f33a", # "yellow", 
+    Wet = "#5b82ef") #"blue")
   ) +
   labs(x = "Longitude", y = "Latitude", fill = "Legend")
 mapa
 ggsave(filename = "mapa_clases_pronostico_2.png", 
        plot = mapa, 
-       path = "plots/", 
+       path = "outputs/plots/fig7", 
        device = "png", height = 16, width = 16, dpi = 300, units = "cm")

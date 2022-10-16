@@ -1,40 +1,37 @@
+library(tidyverse)
 
 
-# con los datos del modelo polinomial 
-# arreglar los coeficientes
 
-coeficientes = read_csv("../lbo_doc/modelos/model_lm_nls_step/model_coefs.csv")
-rendimiento = read_csv("../lbo_doc/modelos/model_lm_nls_step/model_performance.csv")
 
-# mejor rendimiento por pixel
-rendimiento_best <- rendimiento %>%
+# best model performance 
+performance_best <- read_csv("outputs/models/model_performance.csv") %>% 
   separate(col = id, 
            into = c("group_number", "region_sst", "region_mslp", "region_rhum", "name", "x", "y"), 
            sep = "_", 
-           convert = TRUE) %>%
+           convert = TRUE
+           ) %>%
   group_by(x, y) %>% 
-  # filtrar el modelo polinomial para toda la cuenca
-  dplyr::filter(model == "poly", region_sst == "s3") |>  # aqui se filtra el modelo polinomial y la region 3
-  filter(p.value < 0.05, R2_test >= 0.2) %>%   # utilizar todos los pixeles
+  # filter the polynomial model and region 3
+  dplyr::filter(model == "poly", region_sst == "s3") |>  
+  filter(p.value < 0.05, R2_test >= 0.2) %>%
   top_n(-1, AIC) %>%
-  # top_n(1, NSE) %>% 
   mutate(which = paste(region_sst, model, sep = ": ") %>% 
            as.factor(),
          pixel_model = as.numeric(which)
   ) %>% 
   dplyr::select(model, region_sst, region_mslp, region_rhum, name, x, y, which, group_number)
 
-# preparar la tabla de coeficientes
-coef_mpoly <- coeficientes %>%
+# table of coefficients
+coef_mpoly <- read_csv("outputs/models/model_coefs.csv") %>%
   separate(col = id, into = c("group_number", 
                               "region_sst", "region_mslp", "region_rhum", "name", "x", "y"), 
            sep = "_", convert = TRUE
   ) %>%
   dplyr::select(model, term, estimate, name, x, y, region_sst, group_number)
-coef_mpoly
 
-# filtran los coefecientes con los mejores rendimientos
-data_c <- left_join(rendimiento_best, 
+
+# filter coefficients with the best performance
+data_c <- left_join(performance_best, 
                     coef_mpoly, 
                     by = c("model", "x", "y", "name", 
                            "region_sst", "group_number")
@@ -48,78 +45,65 @@ data_c <- left_join(rendimiento_best,
               names_from = c(term), 
               values_from = estimate)
 
-datos0 <- readRDS('../lbo_doc/resultados/datos_preProceso/datos_f.rds') 
-datos <-  datos0 %>% 
-  dplyr::select(date, x, y, name, cdr, #nino12, 
-                mslp, sst, reg_sst, reg_rhum, reg_mslp) %>%   # ,nino12) %>% 
-  filter(reg_rhum == "r3", reg_mslp == "m1", reg_sst == "s3") %>% 
+# SST data
+forescast <- readRDS("data/rds/data_timeseries.rds") %>%
+# datos <-  datos0 %>% 
+  dplyr::select(date, x, y, name, cdr, 
+                mslp, sst, reg_sst, reg_rhum, reg_mslp) %>% 
+  filter(reg_rhum == "r1", reg_mslp == "m1", reg_sst == "s3") %>% 
   group_by(x, y, reg_sst) %>% 
-  mutate(sst = lag(sst, 11))  #, 
-# nino12 = lag(nino12, 11),
-# mslp = lag(mslp, 11))
-
-# predicción con todos los datos 
-datos1 <- left_join(datos, data_c, by = c("x", "y")) %>% 
-  mutate(pred_poly = b0 + b2*sst^2 + b1*sst) %>%   #, 
-  # pred_sw = b0 + sst*sst_c + nino12*nino12_c + mslp*mslp_c)
-  mutate(pred_poly = ifelse(pred_poly < 0, 0, pred_poly))  
-(p1 <- 
-    datos1 %>% 
-    filter(name == "Goudiry") %>% 
-    mutate(pred_poly = ifelse(pred_poly < 0, 0, pred_poly)))  
-
-p1 %>% 
-  ggplot(aes(x = cdr, y = pred_poly)) +
-  geom_point()
-
-# ml <- lm(pred_poly ~ cdr, data = p1)
-# summary(ml)
+  mutate(sst = lag(sst, 11)) %>%   
+  left_join(., data_c, by = c("x", "y")) %>% 
+  mutate(pred_poly = b0 + b2*sst^2 + b1*sst) %>%  
+  mutate(pred_poly = ifelse(pred_poly < 0, 0, pred_poly)) %>% 
 
 
-
-# preparar los datos de pronostico para exportar  
-dato_prn <- datos1 |> 
-  ungroup() |>
-  group_by(x, y) |>
-  dplyr::select(date, name, x, y, cdr, pred_poly) |> 
-  mutate(id_xy = paste(x, y, sep = "_"))
-
-saveRDS(dato_prn, "../lbo_doc/resultados/pronostico_prc_rds_por_pixel/pronostico_poly_mensual.rds")
-
-# export los datos de pronostico
-i = ""
-for (i in unique(dato_prn$id_xy)) {
-  write_csv(x = dato_prn[dato_prn$id_xy == i, ], 
-            file = paste("../lbo_doc/resultados/pronostico_prc_csv_por_pixel/", 
-                         i, ".csv"), 
-            append = TRUE) # append = F, no añade el nombre como nueva columna
-}
-write_csv()
-
-
-
-# plot año mes del pronostico espacial
-# coef_filtrado %>%
-plot_prn <- 
-  datos1 %>% 
+# datos1 <- read_rds("../lbo_doc/resultados/pronostico_prc_rds_por_pixel/pronostico_poly_mensual.rds")
+# # plot año mes del pronostico espacial
+# # coef_filtrado %>%
+# plot_prn <-
+#   datos %>%
+#   # dato_prn %>% 
   filter(date >= "2005-01-01") %>%
   mutate(year = lubridate::year(date),
-         month = lubridate::month(date)) %>%
+         month = lubridate::month(date)) 
+map <- 
+forescast %>% 
   ggplot() +
   geom_raster(aes(x, y, fill = pred_poly)) +
-  facet_grid(year~month, labeller = labeller(month = c(`1` = "Ene", `2` = "Feb", `3` = "Mar", 
-                                                       `4` = "Abr", `5` = "May", `6` = "Jun", 
-                                                       `7` = "Jul", `8` = "Ago", `9` = "Sep", 
-                                                       `10`= "Oct", `11`= "Nov", `12`= "Dic"))
+  facet_grid(year~month, labeller = labeller(month = c(`1` = "Jan", `2` = "Feb", `3` = "Mar", 
+                                                       `4` = "Apr", `5` = "May", `6` = "Jun", 
+                                                       `7` = "Jul", `8` = "Aug", `9` = "Sep", 
+                                                       `10`= "Oct", `11`= "Nov", `12`= "Dec"))
   ) +
   scale_fill_gradientn(colors = RColorBrewer::brewer.pal(9, "GnBu")) +
   scale_x_continuous(breaks = NULL) +
   scale_y_continuous(breaks = NULL) +
-  labs(x = 'Longitud', y = 'Latitud', fill = "Prc (mm)")
+  labs(x = 'Longitude', y = 'Latitude', fill = "Precipitation (mm)")
 
 # guardar el plot 
-ggsave(filename = "../lbo_doc/resultados/figuras/plot_mes_año_pronst_prc.png", 
-       plot = plot_prn, device = "png", width = 14, height = 16, units = "cm")
+ggsave(filename = "outputs/plots/fi5.png",  
+       plot = map, device = "png", units = "cm", width = 20, height = 12, dpi = 300)
+
+
+ggsave(filename = "outputs/plots/fig5.png", 
+       plot = last_plot(), device = 'png', units = 'cm', height = 18, width = 14, dpi = 300)
+
+p <- 
+iris %>% 
+  ggplot(aes(Sepal.Length, Sepal.Width, colour = Species)) +
+  geom_point()
+p
+ggplot2::ggsave(filename = "outputs/plots/ff.png", plot = p,
+       device = "png", dpi = 300, height = 18, width = 14)
+
+#
+
+
+
+
+
+
 
 # una tabla con el promedio por mes y el total anual 
 tbl_month <- 
