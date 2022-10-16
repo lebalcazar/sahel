@@ -2,6 +2,8 @@ library(fitdistrplus)
 library(lubridate)
 library(tidyverse)
 library(sf)
+library(extrafont)
+#loadfonts(quiet = TRUE)
 source("R/functions.R")
 
 # Locations of meteorological stations
@@ -71,7 +73,7 @@ season_map_data %>%
  aes(x, y) +
  geom_tile(aes(fill = clase)) +
  geom_sf(data = ubcEst) +
- geom_text(data = ubcEst, size = 3,
+ geom_text(data = ubcEst, size = 3, family = "Palatino Linotype",
            aes(x = x, y = y, label = name), 
            nudge_y = c(rep(0.25, 10), -0.25, rep(0.25, 9))) +
  scale_fill_manual(values = pal, 
@@ -80,7 +82,7 @@ season_map_data %>%
                       "Normal" = "Around normal", 
                       "Dry"    = "Below normal")) +
  labs(x = "Longitude", y = "Latitude") +
- theme_classic(base_size = 10) +
+ theme_classic(base_size = 10, base_family = "Palatino Linotype") +
  theme(panel.grid.major = element_blank(), 
        panel.grid.minor = element_blank(), 
        legend.position = c(0.99, 0.99),
