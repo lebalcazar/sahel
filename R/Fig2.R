@@ -14,7 +14,7 @@ sst <- st_read("data/gpkg/vector_layers.gpkg", "SST zones")
 colnames(sst) <- c("fid_", "layer", "geom")
 sst$variable <- "SST"
 
-atlantic_zones <- rbind(sst, rhum) |> 
+atlantic_zones <- rbind(sst, rhum) %>% 
  rbind(mslp)
 
 texts <- data.frame(x = c(-60, 0), 
