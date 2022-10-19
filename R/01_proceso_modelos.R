@@ -2,7 +2,9 @@ library(tidyverse)
 library(broom)
 library(sf)
 
+#  read function
 source('R/functions.R')
+
 # read data base 
 data <- readRDS('data/rds/data_timeseries.rds')  %>% 
   # removed according to VIF
@@ -17,7 +19,7 @@ ids <- dplyr::group_keys(data) %>%
                             name, '_',
                             x, '_', 
                             y))
-
+#  split data
 data <- dplyr::group_split(data)
 
 # Run the function for many data sets.
