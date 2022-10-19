@@ -1,0 +1,43 @@
+Author,Data/location,Sources and Characteristics,"Models
+(rainfall forecast)","Lag
+(months)",Efficiency
+In this study,"Atlantic SST
+(0.25° x 0.25°), PCA cluster analysis/Bani basin",ERA5,Second-order polynomial,11,"SST: NSE mean = 0.867
+SST: NSE max = 0.926
+SST: NSE min = 0.751"
+In this study,"Atlantic SST
+(0.25° x 0.25°), PCA cluster analysis/Senegal basin",ERA5,Second-order polynomial,11,"SST: NSE mean = 0.713
+SST: NSE max = 0.915
+SST: NSE min = 0.175"
+Sittichok et al. ,"Atlantic SST, Pacific (2° x 2°), combination of regression, PCA and ACC/Sirba basin",International Research Institute for Climate and Society.,Linear,12,"Atlantic SST NSE = 0.23
+Pacific SST NSE = 0.38
+"
+Sittichok et al. ,SST/ (2° x 2°),National Water Service (NWS)/NOAA,"Stepwise Regression, Linear Regression",12,SST: NSE = 0.39
+"Gado Djibo, et al. ","SLP, RHUM,
+Ta, zonal wind and meridional wind/Sirba basin","NCEP- DOE Reanalysis (NOAA: http://www.esrl.noaa.gov), 2.5° x 2.5°.",Linear,"
+SLP: 0
+RHUM: 8
+Ta: 7
+VWIND: 8
+UWIND: 7
+SST: 12","SLP: NSE = 0.46
+RHUM: NSE = 0.52
+Ta: NSE = 0.53
+VWIND: NSE = 0.28
+UWIND: NSE = 0.32
+SST: NSE = 0.34"
+,,,Non-linear,"
+SLP: 9
+RHUM: 7
+Ta: 8","SLP: NSE = 0.31
+RHUM: NSE = 0.36
+Ta: NSE = 0.45"
+"Gado Djibo, et al. ","Ta, SLP, RHUM",Climatic Research Unit,Linear,"Ta: 14
+SLP: 0
+RHUM: 8","Ta:  NSE = 0.76
+SLP: NSE = 46
+RHUM: NSE =0.52"
+Garric et al. ,Gulf of Guinea SST,"CRU, NCEP/NCAR, ECMWF)","Linear, Stepwise Regression",12,SST: r = 0.67
+"Folland, et al. ",SST,Meteorological Office Historical Sea Surface Temperature data set version 3 (MOHSST3),"Step-by-step Regression
+Linear Discriminant Stepwise Regression",1,"SST: r = 0.54
+SST: r = 0.72"
