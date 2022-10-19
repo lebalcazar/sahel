@@ -252,7 +252,7 @@ nDatos <- function(obs, cal){
 #' @param obs Numeric vector of observed values 
 RE <- function(obs, cal){
  num = abs(obs - cal)
- er = (num/cal) * 100
+ er = (num/obs) * 100
 }
 
 # Safe predict function ----
