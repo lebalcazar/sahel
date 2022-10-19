@@ -17,6 +17,8 @@ sst$variable <- "SST"
 atlantic_zones <- rbind(sst, rhum) %>% 
  rbind(mslp)
 
+atlantic_zones$variable <- factor(atlantic_zones$variable, 
+                                  levels = c("SST", "RHUM", "MSLP"))
 texts <- data.frame(x = c(-60, 0), 
                     y = c(-10, 20), 
                     label = c("South\nAmerica", "Africa"))
@@ -37,7 +39,7 @@ ggplot() +
        panel.background = element_rect(fill = "#f2f2f2"),
        axis.title = element_blank())
 
-ggsave("Fig2.png", path = "outputs/plots", device = "png",
+ggsave("fig2.png", path = "outputs/plots", device = "png",
        width = 18.5, height = 5, units = "cm", 
        dpi = 300, scale = 1.25)
  
