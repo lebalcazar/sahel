@@ -31,4 +31,6 @@ If you don't have installed the pacakges required by the project you will see a
 installation process displayed.
 
 # References
+Balcázar, L.; Bâ, K.; Díaz-Delgado, C.; Gómez-Albores, M.A.; Gaona, G.; Minga-León, S. Development and Assessment of Seasonal Rainfall Forecasting Models for the Bani and the Senegal Basins by Identifying the Best Predictive Teleconnection. Remote Sensing 2022, 14, 6397, doi:10.3390/rs14246397.
+
 Bâ, K.; Balcázar, L.; Diaz, V.; Ortiz, F.; Gómez-Albores, M.; Díaz-Delgado, C. Hydrological Evaluation of PERSIANN-CDR Rainfall over Upper Senegal River and Bani River Basins. Remote Sensing 2018, 10, 1884, doi:10.3390/rs10121884.
